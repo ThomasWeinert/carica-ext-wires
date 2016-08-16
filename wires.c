@@ -163,8 +163,10 @@ PHP_FUNCTION(wires_shiftOut)
 
 PHP_MINFO_FUNCTION(wires)
 {
-	php_info_print_table_start();
-	php_info_print_table_header(2, "Wires Support", "enabled");
+    php_info_print_table_start();
+    php_info_print_table_header(2, "Wires Support", "enabled");
+    php_info_print_table_row(2, "Extension Version", PHP_WIRES_EXTVER);
+    php_info_print_table_end();
 }
 
 PHP_MINIT_FUNCTION(wires)

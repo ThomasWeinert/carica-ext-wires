@@ -2,7 +2,7 @@
 #define PHP_WIRES_H
 
 #define PHP_WIRES_EXTNAME  "wires"
-#define PHP_WIRES_EXTVER   "1.0"
+#define PHP_WIRES_EXTVER   "0.1"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
