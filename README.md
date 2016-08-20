@@ -51,5 +51,25 @@ while (TRUE) {
 }
 ```
 
+Advanced Usage
+--------------
 
+Carica/ext-wires integrates into [Carica/Gpio](https://github.com/ThomasWeinert/carica-gpio). 
+It provides Pin and ShiftOut interfaces. You can use it from 
+[Carica Chip](https://github.com/ThomasWeinert/carica-chip).
 
+Carica Chip provides an LED class so the example will change to:
+
+```php
+<?php
+require(__DIR__.'/../vendor/autoload.php');
+
+$board = new Carica\Gpio\Boards\RaspberryPiB(
+  new Carica\Gpio\WiringPi\Commands()
+);
+
+$led = new Carica\Chip\Led($board->pins[26]);
+$led->strobe()->on();
+
+Carica\Io\Event\Loop\Factory::run();
+```
