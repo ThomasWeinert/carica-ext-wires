@@ -13,6 +13,12 @@
 extern zend_module_entry wires_zend_module_entry;
 #define phpext_wires_ptr &wires_zend_module_entry
 
+typedef struct _wires_i2c_device {
+   zend_long descriptor;
+} wires_i2c_device;
+
+#define WIRES_I2C_DEVICE_RESOURCE_NAME "i2c device"
+
 #ifdef ZTS
 #include "TSRM.h"
 #endif

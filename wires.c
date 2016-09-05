@@ -3,12 +3,22 @@
 #include "ext/spl/spl_exceptions.h"
 #include <wiringPi.h>
 #include <wiringShift.h>
+#include <wiringPiI2C.h>
 
 #define WIRES_NS "Carica\\Gpio\\WiringPi"
+#define WIRES_NS_I2C "Carica\\Gpio\\WiringPi\\I2C"
 
 #define SETUP_GPIO 0
 #define SETUP_SYSFS 1
 #define SETUP_WIRINGPI 2
+
+#define I2C_REGISTER_8BIT 1
+#define I2C_REGISTER_16BIT 2
+
+int le_i2c_device_resource_name;
+
+/* Generic GPIO (Pin Handling) */
+/* =========================== */
 
 ZEND_BEGIN_ARG_INFO(ArgInfo_SetupMode, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
@@ -26,13 +36,6 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO(ArgInfo_PinAndValue, 0)
     ZEND_ARG_TYPE_INFO(0, pin, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, value, IS_LONG, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(ArgInfo_wires_shiftOut, 0)
-    ZEND_ARG_TYPE_INFO(0, dataPin, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, clockPin, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, order, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, byte, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 PHP_FUNCTION(wires_setup)
@@ -151,6 +154,16 @@ PHP_FUNCTION(wires_analogWrite)
     analogWrite(pin, value);
 }
 
+/* Shiftout */
+/* ======== */
+
+ZEND_BEGIN_ARG_INFO(ArgInfo_wires_shiftOut, 0)
+    ZEND_ARG_TYPE_INFO(0, dataPin, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, clockPin, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, order, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, byte, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 PHP_FUNCTION(wires_shiftOut)
 {
     zend_long dataPin, clockPin, order, value;
@@ -160,6 +173,133 @@ PHP_FUNCTION(wires_shiftOut)
     }
     shiftOut(dataPin, clockPin, order, value);
 }
+
+/* I2C */
+/* === */
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_setup, IS_LONG, NULL, 0)
+    ZEND_ARG_TYPE_INFO(0, deviceAddress, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(wires_i2c_setup) {
+
+    zend_long deviceAddress;
+    wires_i2c_device *device;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &deviceAddress) == FAILURE) {
+        RETURN_NULL();
+    }
+
+    device = emalloc(sizeof(wires_i2c_device));
+    device->descriptor = wiringPiI2CSetup(deviceAddress);
+
+    ZEND_REGISTER_RESOURCE(return_value, device, le_i2c_device_resource_name);
+
+    RETURN_RESOURCE(device);
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_read, IS_LONG, NULL, 0)
+    ZEND_ARG_TYPE_INFO(0, device, IS_RESOURCE, 0)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(wires_i2c_read) {
+
+    wires_i2c_device *device;
+    zval *zdevice;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zdevice) == FAILURE) {
+        RETURN_NULL();
+    }
+    device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
+
+    RETURN_LONG(wiringPiI2CRead(device->descriptor));
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_write, IS_LONG, NULL, 0)
+    ZEND_ARG_TYPE_INFO(0, device, IS_RESOURCE, 0)
+    ZEND_ARG_TYPE_INFO(0, data, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(wires_i2c_write) {
+
+    wires_i2c_device *device;
+    zval *zdevice;
+    zend_long data;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zdevice, &data) == FAILURE) {
+        RETURN_NULL();
+    }
+    device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
+
+    RETURN_LONG(wiringPiI2CWrite(device->descriptor, data));
+
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_readRegister, IS_LONG, NULL, 0)
+    ZEND_ARG_TYPE_INFO(0, device, IS_RESOURCE, 0)
+    ZEND_ARG_TYPE_INFO(0, registerAddress, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, registerSize, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(wires_i2c_readRegister) {
+
+    wires_i2c_device *device;
+    zval *zdevice;
+    zend_long registerAddress, registerSize;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zdevice, &registerAddress, &registerSize) == FAILURE) {
+        RETURN_NULL();
+    }
+    device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
+
+    switch (registerSize) {
+    case I2C_REGISTER_8BIT :
+      RETURN_LONG(wiringPiI2CReadReg8(device->descriptor, registerAddress));
+      return;
+    case I2C_REGISTER_16BIT :
+      RETURN_LONG(wiringPiI2CReadReg16(device->descriptor, registerAddress));
+      return;
+    }
+
+    zend_throw_exception_ex(
+        spl_ce_OutOfRangeException, 0, "Use Carica\\Gpio\\WiringPi\\I2C::REGISTER_* constant."
+    );
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_writeRegister, IS_LONG, NULL, 0)
+    ZEND_ARG_TYPE_INFO(0, device, IS_RESOURCE, 0)
+    ZEND_ARG_TYPE_INFO(0, registerAddress, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, registerSize, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, data, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(wires_i2c_writeRegister) {
+
+    wires_i2c_device *device;
+    zval *zdevice;
+    zend_long registerAddress, registerSize, data;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zdevice, &registerAddress, &registerSize, &data) == FAILURE) {
+        RETURN_NULL();
+    }
+    device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
+
+    switch (registerSize) {
+    case I2C_REGISTER_8BIT :
+      RETURN_LONG(wiringPiI2CWriteReg8(device->descriptor, registerAddress, data));
+      return;
+    case I2C_REGISTER_16BIT :
+      RETURN_LONG(wiringPiI2CWriteReg16(device->descriptor, registerAddress, data));
+      return;
+    }
+
+    zend_throw_exception_ex(
+        spl_ce_OutOfRangeException, 0, "Use Carica\\Gpio\\WiringPi\\I2C::REGISTER_* constant."
+    );
+}
+
+/* PHP Extension Hooks */
+/* =================== */
 
 PHP_MINFO_FUNCTION(wires)
 {
@@ -188,6 +328,11 @@ PHP_MINIT_FUNCTION(wires)
 
     REGISTER_NS_LONG_CONSTANT(WIRES_NS, "LSBFIRST", LSBFIRST, CONST_CS | CONST_PERSISTENT);
     REGISTER_NS_LONG_CONSTANT(WIRES_NS, "MSBFIRST", MSBFIRST, CONST_CS | CONST_PERSISTENT);
+
+    le_i2c_device_resource_name = zend_register_list_destructors_ex(NULL, NULL, WIRES_I2C_DEVICE_RESOURCE_NAME, module_number);
+
+    REGISTER_NS_LONG_CONSTANT(WIRES_NS_I2C, "REGISTER_8", I2C_REGISTER_8BIT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT(WIRES_NS_I2C, "REGISTER_16", I2C_REGISTER_16BIT, CONST_CS | CONST_PERSISTENT);
 }
 
 const zend_function_entry php_wires_functions[] = {
@@ -199,7 +344,14 @@ const zend_function_entry php_wires_functions[] = {
     ZEND_NS_NAMED_FE(WIRES_NS, pwmWrite, ZEND_FN(wires_pwmWrite), ArgInfo_PinAndValue)
     ZEND_NS_NAMED_FE(WIRES_NS, analogRead, ZEND_FN(wires_analogRead), ArgInfo_PinReturnValue)
     ZEND_NS_NAMED_FE(WIRES_NS, analogWrite, ZEND_FN(wires_analogWrite), ArgInfo_PinAndValue)
+    /* ShiftOut */
     ZEND_NS_NAMED_FE(WIRES_NS, shiftOut, ZEND_FN(wires_shiftOut), ArgInfo_wires_shiftOut)
+    /* I2C */
+    ZEND_NS_NAMED_FE(WIRES_NS_I2C, setup, ZEND_FN(wires_i2c_setup), ArgInfo_wires_i2c_setup)
+    ZEND_NS_NAMED_FE(WIRES_NS_I2C, read, ZEND_FN(wires_i2c_read), ArgInfo_wires_i2c_read)
+    ZEND_NS_NAMED_FE(WIRES_NS_I2C, write, ZEND_FN(wires_i2c_write), ArgInfo_wires_i2c_write)
+    ZEND_NS_NAMED_FE(WIRES_NS_I2C, readRegister, ZEND_FN(wires_i2c_readRegister), ArgInfo_wires_i2c_readRegister)
+    ZEND_NS_NAMED_FE(WIRES_NS_I2C, writeRegister, ZEND_FN(wires_i2c_writeRegister), ArgInfo_wires_i2c_writeRegister)
     PHP_FE_END
 };
 
