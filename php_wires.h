@@ -13,7 +13,7 @@
 extern zend_module_entry wires_zend_module_entry;
 #define phpext_wires_ptr &wires_zend_module_entry
 
-typedef struct _wires_i2c_device {
+typedef struct {
    zend_long descriptor;
 } wires_i2c_device;
 

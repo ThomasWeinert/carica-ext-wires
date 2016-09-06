@@ -177,7 +177,17 @@ PHP_FUNCTION(wires_shiftOut)
 /* I2C */
 /* === */
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_setup, IS_LONG, NULL, 0)
+static void wires_i2c_device_dtor(zend_resource *rsrc)
+{
+    wires_i2c_device *device = (wires_i2c_device*)rsrc->ptr;
+
+    if (device) {
+        fclose((FILE*)device->descriptor);
+        efree(device);
+    }
+}
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO(ArgInfo_wires_i2c_setup, IS_RESOURCE, NULL, 0)
     ZEND_ARG_TYPE_INFO(0, deviceAddress, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -329,7 +339,7 @@ PHP_MINIT_FUNCTION(wires)
     REGISTER_NS_LONG_CONSTANT(WIRES_NS, "LSBFIRST", LSBFIRST, CONST_CS | CONST_PERSISTENT);
     REGISTER_NS_LONG_CONSTANT(WIRES_NS, "MSBFIRST", MSBFIRST, CONST_CS | CONST_PERSISTENT);
 
-    le_i2c_device_resource_name = zend_register_list_destructors_ex(NULL, NULL, WIRES_I2C_DEVICE_RESOURCE_NAME, module_number);
+    le_i2c_device_resource_name = zend_register_list_destructors_ex(wires_i2c_device_dtor, NULL, WIRES_I2C_DEVICE_RESOURCE_NAME, module_number);
 
     REGISTER_NS_LONG_CONSTANT(WIRES_NS_I2C, "REGISTER_8", I2C_REGISTER_8BIT, CONST_CS | CONST_PERSISTENT);
     REGISTER_NS_LONG_CONSTANT(WIRES_NS_I2C, "REGISTER_16", I2C_REGISTER_16BIT, CONST_CS | CONST_PERSISTENT);
