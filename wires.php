@@ -140,4 +140,6 @@ namespace Carica\Gpio\WiringPi\I2C {
      */
     function writeRegister(resource $device, int $registerAddress, $registerSize, int $data) : int { };
 
+    class ErrorException extends \Exception {}
+
 }
