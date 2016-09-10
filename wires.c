@@ -184,7 +184,7 @@ static void wires_i2c_device_dtor(zend_resource *rsrc)
     wires_i2c_device *device = (wires_i2c_device*)rsrc->ptr;
 
     if (device) {
-        fclose((FILE*)device->descriptor);
+        //fclose((FILE*)device->descriptor);
         efree(device);
     }
 }
@@ -226,8 +226,7 @@ PHP_FUNCTION(wires_i2c_setup) {
     } else {
         device = emalloc(sizeof(wires_i2c_device));
         device->descriptor = descriptor;
-        ZEND_REGISTER_RESOURCE(return_value, device, le_i2c_device_resource_name);
-        RETURN_RESOURCE(device);
+        RETURN_RES(zend_register_resource(device, le_i2c_device_resource_name));
     }
 
 }
@@ -326,7 +325,7 @@ PHP_FUNCTION(wires_i2c_writeRegister) {
     zval *zdevice;
     zend_long registerAddress, registerSize, data, result;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zdevice, &registerAddress, &registerSize, &data) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rlll", &zdevice, &registerAddress, &registerSize, &data) == FAILURE) {
         RETURN_NULL();
     }
     device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
