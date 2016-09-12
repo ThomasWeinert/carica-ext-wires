@@ -46,9 +46,10 @@ PHP_FUNCTION(wires_setup)
     zend_long error = 0;
     char message[128];
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &mode) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+    	Z_PARAM_OPTIONAL
+    	Z_PARAM_LONG(mode)
+    ZEND_PARSE_PARAMETERS_END();
 
     putenv("WIRINGPI_CODES=1");
     if (mode == SETUP_GPIO) {
@@ -75,9 +76,11 @@ PHP_FUNCTION(wires_pinMode)
     zend_long pin;
     zend_long mode;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &mode) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(mode)
+    ZEND_PARSE_PARAMETERS_END();
+
     pinMode(pin, mode);
 }
 
@@ -86,9 +89,11 @@ PHP_FUNCTION(wires_pinModeAlt)
     zend_long pin;
     zend_long mode;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &mode) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(mode)
+    ZEND_PARSE_PARAMETERS_END();
+
     pinModeAlt(pin, mode);
 }
 
@@ -97,9 +102,11 @@ PHP_FUNCTION(wires_pullUpDnControl)
     zend_long pin;
     zend_long pud;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &pud) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(pud)
+    ZEND_PARSE_PARAMETERS_END();
+
     pullUpDnControl(pin, pud);
 }
 
@@ -107,9 +114,10 @@ PHP_FUNCTION(wires_digitalRead)
 {
     zend_long pin;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &pin) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    	Z_PARAM_LONG(pin)
+    ZEND_PARSE_PARAMETERS_END();
+
     RETURN_LONG(digitalRead(pin));
 }
 
@@ -118,9 +126,11 @@ PHP_FUNCTION(wires_digitalWrite)
     zend_long pin;
     zend_long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &value) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(value)
+    ZEND_PARSE_PARAMETERS_END();
+
     digitalWrite(pin, (value == HIGH) ? HIGH : LOW);
 }
 
@@ -129,9 +139,11 @@ PHP_FUNCTION(wires_pwmWrite)
     zend_long pin;
     zend_long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &value) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(value)
+    ZEND_PARSE_PARAMETERS_END();
+
     pwmWrite(pin, value);
 }
 
@@ -139,9 +151,10 @@ PHP_FUNCTION(wires_analogRead)
 {
     zend_long pin;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &pin) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    	Z_PARAM_LONG(pin)
+    ZEND_PARSE_PARAMETERS_END();
+
     RETURN_LONG(analogRead(pin));
 }
 
@@ -150,9 +163,11 @@ PHP_FUNCTION(wires_analogWrite)
     zend_long pin;
     zend_long value;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll", &pin, &value) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_LONG(pin)
+    	Z_PARAM_LONG(value)
+    ZEND_PARSE_PARAMETERS_END();
+
     analogWrite(pin, value);
 }
 
@@ -168,12 +183,19 @@ ZEND_END_ARG_INFO()
 
 PHP_FUNCTION(wires_shiftOut)
 {
-    zend_long dataPin, clockPin, order, value;
+    zend_long dataPin, clockPin, order, byte;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "llll", &dataPin, &clockPin, &order, &value) == FAILURE) {
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+    	Z_PARAM_LONG(dataPin)
+    	Z_PARAM_LONG(clockPin)
+    	Z_PARAM_LONG(order)
+    	Z_PARAM_LONG(byte)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "llll", &dataPin, &clockPin, &order, &byte) == FAILURE) {
         RETURN_NULL();
     }
-    shiftOut(dataPin, clockPin, order, value);
+    shiftOut(dataPin, clockPin, order, byte);
 }
 
 /* I2C */
@@ -216,9 +238,9 @@ PHP_FUNCTION(wires_i2c_setup) {
     wires_i2c_device *device;
     zend_long descriptor;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &deviceAddress) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    	Z_PARAM_LONG(deviceAddress)
+    ZEND_PARSE_PARAMETERS_END();
 
     descriptor = wiringPiI2CSetup(deviceAddress);
     if (descriptor < 0) {
@@ -241,9 +263,10 @@ PHP_FUNCTION(wires_i2c_read) {
     zval *zdevice;
     zend_long data;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zdevice) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    	Z_PARAM_RESOURCE(zdevice)
+    ZEND_PARSE_PARAMETERS_END();
+
     device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
 
     data = wiringPiI2CRead(device->descriptor);
@@ -265,9 +288,11 @@ PHP_FUNCTION(wires_i2c_write) {
     zval *zdevice;
     zend_long data;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zdevice, &data) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    	Z_PARAM_RESOURCE(zdevice)
+    	Z_PARAM_LONG(data)
+    ZEND_PARSE_PARAMETERS_END();
+
     device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
 
     if (wiringPiI2CWrite(device->descriptor, data) < 0) {
@@ -287,9 +312,12 @@ PHP_FUNCTION(wires_i2c_readRegister) {
     zval *zdevice;
     zend_long registerAddress, registerSize, data;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rll", &zdevice, &registerAddress, &registerSize) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+    	Z_PARAM_RESOURCE(zdevice)
+    	Z_PARAM_LONG(registerAddress)
+    	Z_PARAM_LONG(registerSize)
+    ZEND_PARSE_PARAMETERS_END();
+
     device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
 
     switch (registerSize) {
@@ -325,9 +353,13 @@ PHP_FUNCTION(wires_i2c_writeRegister) {
     zval *zdevice;
     zend_long registerAddress, registerSize, data, result;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rlll", &zdevice, &registerAddress, &registerSize, &data) == FAILURE) {
-        RETURN_NULL();
-    }
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+    	Z_PARAM_RESOURCE(zdevice)
+    	Z_PARAM_LONG(registerAddress)
+    	Z_PARAM_LONG(registerSize)
+    	Z_PARAM_LONG(data)
+    ZEND_PARSE_PARAMETERS_END();
+
     device = (wires_i2c_device *)zend_fetch_resource(Z_RES_P(zdevice), WIRES_I2C_DEVICE_RESOURCE_NAME, le_i2c_device_resource_name);
 
     switch (registerSize) {
