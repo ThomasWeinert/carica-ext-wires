@@ -22,7 +22,7 @@ zend_class_entry *wires_i2c_error_exception;
 /* Generic GPIO (Pin Handling) */
 /* =========================== */
 
-ZEND_BEGIN_ARG_INFO(ArgInfo_SetupMode, 0)
+ZEND_BEGIN_ARG_INFO_EX(ArgInfo_SetupMode, 0, 0, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
